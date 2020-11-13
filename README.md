@@ -9,13 +9,21 @@
 2. image 界面所用的图片
 3. json 配置文件
 ```
+
 + control	控制-冲突处理文件夹
 + render	渲染文件夹
-- exam.json	考试列表json
 - practice.json	练习json
 - guide.json	基础步骤与提示json
-- region.json	各区域布局json		
+- region.json	各区域布局json
 ```
+
+4. 跟包 json (与外层灯光考试、灯光视频共用) 		
+
+```
+- exam.json	考试列表json
+- practice.json	练习json
+```
+
 
 ### Json结构：
 control：
@@ -171,24 +179,26 @@ guide.json
 region.json
 
 ```
+
  {
-    "name": "旋钮区域",
-    "width": "118",
-    "height": "118",
-    "left": "110",
-    "top": "268",
+    "name": "出风口区域",
+    "width": "274",
+    "height": "139",
+    "left": "460",
+    "top": "213",
     "subRegion": [
       {
-        "name": "旋钮区域-关闭",
-        "slot": 1,
-        "width": "22",
-        "height": "22",
-        "left": "47",
-        "top": "4",
+        "name": "应急按钮区域",
+        "width": "50",
+        "height": "40",
+        "alignment": "center",
+        "left": "0",
+        "top": "0",
         "action": {
-          "type": "stuck"
+          "type": "click"
         }
       }
+      ]
   }
 
 ```
@@ -209,6 +219,10 @@ region.json
 
 >> slot 初始状态
 
+>> slotSize 状态个数
+
+>> alignment 对齐方式  如果有次字段且字段值为“center”时 区域在父区域居中，否则根据left、top定位
+
 >> width 子区域宽度
 
 >> height 子区域高度
@@ -217,7 +231,52 @@ region.json
 
 >> top 距父区域顶部距离
 
->> action 活动：stuck：点击时把该区域状态置为1、touch：手指按下时把该区域状态置为1，松开时置为0、click：点击时切换该区域状态
+>> action 活动 type：stuck：点击时把该区域状态置为1、touch：手指按下时把该区域状态置为1，松开时置为0、click：点击时切换该区域状态、slide：滑动。   deltaX、deltaY：触发滑动时XY的增量
+
+
+车型接口：https://rapi.mnks.cn/data/banner/app_json_com.runbey.ybjk_car_light_config.json
+
+```
+{
+  "carId": "1",
+  "title": "新捷达灯光操作",
+  "desc": "本套灯光操作适用于2013-2019年款大众捷达。",
+  "cover": "https://sucimg.itc.cn/sblog/j25a277c8e121ff6478577cf9e56f82e6",
+  "tryTime": "20",
+  "time": "05:33",
+  "url": "https://sp.mnks.cn/km3/yjdgmn/xinjieda.mp4",
+  "train": {
+    "icon": "https://sucimg.itc.cn/sblog/j8a7193610b6688c94e13ab41e3327611",
+    "zip": "https://wycbd.mnks.cn/ybjk/light/car/newjieda.zip",
+    "carName": "新捷达",
+    "version": ""
+  }
+}
+```
+解释：
+> carId 外部使用
+
+> title 外部使用
+
+> desc 外部使用
+
+> cover 外部使用
+
+> tryTime 外部使用
+
+> time 外部使用
+
+> url 视频讲解链接
+
+> train
+
+>> icon 车型列表icon图标url
+
+>> zip 车型素材下载链接 zip密码： com.runbey   取包名截出密码，不能用明文
+
+>> carName 车型名
+
+>> version 版本号，纯数字，当该字段为空时，所有版本均展示，当该字段有值，则>= 该版本展示 ，仅配置一个版本号即可 exp: "70"
 
 
 ## UI界面规则
@@ -237,57 +296,74 @@ region.json
 
 > *纵向取375，横向取667
 
+## 区域
+根据region.json按需展示区域，区域图层排序、所需json如下
+1. 背景区域
 
+```
+图片：json/render/渲染-背景区域.json
+```
 
-## Android 
+2. 车架区域
 
-### manager.AudioManager
-音效管理类
+```
+图片：json/render/渲染-背景区域.json
+```
 
-- +playShortAudio(Context context, String path)	播放单次音效
-- +playQuestionAudio(Context context, String path, final MediaPlayer.OnCompletionListener completionListener)	播放题目音效
-- +playLongAudio(Context context, String path)	播放循环音效
-- -initAudio(Context context, String path, MediaPlayer mediaPlayer)	初始化音效MediaPlayer对象
-- +stopQuestionAudio()	停止播放题目音效
-- +playRightAudio(Context context)	播放操作正确音效
-- +playErrorAudio(Context context)	播放操作错误音效
-- +pauseAudio() 	暂停循环播放音效
-- +restartAudio()	重新开始播放循环音效
-- +stopLongAudio() 停止播放循环音效
-- +playAudio(Context context, List<RenderBean.ResourceList> resourceList)	根据resourceList播放音效
-- +destroy()	停止所有音效的播放并释放资源
+3. 拨杆区域
 
-### manager.MediaPlayerManager
-- +playMediaPlayer(String url) 播放视频
-- -initMediaPlayer()	初始化
-- +restart()	继续播放
-- +pause()	暂停播放
-- +stop()	停止播放
-- +destroy()	释放资源
+```
+图片：json/render/渲染-拨杆区域.json
+声音：json/render/渲染-声音.json
+```
 
-### view.WidgetView	
-各区域组件的父类
-- init(RegionBean data)	设置区域大小与位置
-- setImg(String path)	设置区域的图片
-- initAudio()	初始化音效json为 "json/render/渲染-声音-" + widgetName + ".json"
-- initAudio(String file)	根据file读取音效json
-- playAudio(String name)	播放音效 name:区域名
-- reset(String name)	冲突处理
-- callBack(String name, int slot)	Tip提示回调
-- showTip(String name, String tip, int slot, TipCallBack callBack) 展示提示tip
+4. 出风口区域
 
-### view.LightingView
-模拟灯光区域
-- -initView() 根据region.json解析需要展示的区域并初始化
-- -checkAnswer(PracticeBean practiceBean):boolean 检查答案
-- -showTime(final int time, final PracticeBean practiceBean)	显示做题倒计时与其他做题信息
-- -doGuide(final List<Integer> list, final int index) 	指引教程 list：指引列表 ，index：当前指引下标
-- -showTip()	展示提示
+```
+图片：json/render/渲染-应急按钮区域.json
+声音：json/render/渲染-声音-应急按钮.json
+```
 
-### view.TsView
-透视区域
-- +init(RegionBean data, LightingView parent) 根据data初始化、绘制区域、添加subRegion中的区域并添加点击监听
-- -getCode(Map<String, Integer> map):long: 根据状态map生成key映射ResourceList对象查找要显示的图片
+5. 后雾灯区域
+
+```
+图片：json/render/渲染-后雾灯.json
+```
+
+6. 仪表盘区域
+
+```
+图片：json/render/渲染-仪表盘区域.json
+控制：
+	json/control/控制-仪表盘-远光灯.json
+	json/control/控制-仪表盘-转向灯.json
+	json/control/控制-仪表盘-近光灯+雾灯光+示宽灯.json
+	json/control/控制-拨杆区域.json
+```
+
+7. 透视区域
+
+```
+图片：json/render/渲染-透视区域.json
+声音：json/render/渲染-声音-透视区域.json
+冲突处理：json/control/控制-透视区域-冲突处理.json
+```
+
+8. 旋钮区域
+
+```
+图片：json/render/控制-旋钮区域.json
+声音：json/render/渲染-声音-旋钮区域.json
+```
+
+解释：
+> 图片 根据json内容查找要展示的图片
+
+> 声音 按键音效
+
+> 冲突处理、控制 根据某些状态去设置其他状态
+
+> 仪表盘控制json数量不固定，存在几个读几个
 
 ### 部分算法
 #### 检查答案
@@ -297,7 +373,7 @@ view.LightingView.checkAnswer(PracticeBean practiceBean)
 ```
 //关闭所有灯光
 if(guide == ""){
-  if(透视区域-重置 == 1 && 旋钮区域-关闭 == 1 && 应急按钮区域 == 0){
+  if(透视区域-重置 == 1 && 旋钮区域-关闭 == 1 && 应急按钮区域 == 0 && 拨杆区域-上 == 0 && 拨杆区域-下 == 0){
     return true;
   }else{
     return false;
@@ -328,7 +404,7 @@ for(所有的状态名s){
 
 //3.没进行多余操作
 for(本题过程中所做的操作b){
-  if(b是题目中要操作的 || b == "透视区域-重置" || b == "旋钮区域-关闭"){
+  if(b是题目中要操作的 || b == "透视区域-重置" || b == "旋钮区域-关闭" || b包含 "拨杆区域"){
     continue;
   }else{
     if(b的操作时打开操作){
@@ -425,4 +501,57 @@ return slot;
     ]
   }
 ```
+
+
+
+## Android 
+
+### manager.AudioManager
+音效管理类
+
+- +playShortAudio(Context context, String path)	播放单次音效
+- +playQuestionAudio(Context context, String path, final MediaPlayer.OnCompletionListener completionListener)	播放题目音效
+- +playLongAudio(Context context, String path)	播放循环音效
+- -initAudio(Context context, String path, MediaPlayer mediaPlayer)	初始化音效MediaPlayer对象
+- +stopQuestionAudio()	停止播放题目音效
+- +playRightAudio(Context context)	播放操作正确音效
+- +playErrorAudio(Context context)	播放操作错误音效
+- +pauseAudio() 	暂停循环播放音效
+- +restartAudio()	重新开始播放循环音效
+- +stopLongAudio() 停止播放循环音效
+- +playAudio(Context context, List<RenderBean.ResourceList> resourceList)	根据resourceList播放音效
+- +destroy()	停止所有音效的播放并释放资源
+
+### manager.MediaPlayerManager
+视频管理类
+- +playMediaPlayer(String url) 播放视频
+- -initMediaPlayer()	初始化
+- +restart()	继续播放
+- +pause()	暂停播放
+- +stop()	停止播放
+- +destroy()	释放资源
+
+### view.WidgetView	
+各区域组件的父类
+- init(RegionBean data)	设置区域大小与位置
+- setImg(String path)	设置区域的图片
+- initAudio()	初始化音效json为 "json/render/渲染-声音-" + widgetName + ".json"
+- initAudio(String file)	根据file读取音效json
+- playAudio(String name)	播放音效 name:区域名
+- reset(String name)	冲突处理
+- callBack(String name, int slot)	Tip提示回调
+- showTip(String name, String tip, int slot, TipCallBack callBack) 展示提示tip
+
+### view.LightingView
+模拟灯光区域
+- -initView() 根据region.json解析需要展示的区域并初始化
+- -checkAnswer(PracticeBean practiceBean):boolean 检查答案
+- -showTime(final int time, final PracticeBean practiceBean)	显示做题倒计时与其他做题信息
+- -doGuide(final List<Integer> list, final int index) 	指引教程 list：指引列表 ，index：当前指引下标
+- -showTip()	展示提示
+
+### view.TsView
+透视区域
+- +init(RegionBean data, LightingView parent) 根据data初始化、绘制区域、添加subRegion中的区域并添加点击监听
+- -getCode(Map<String, Integer> map):long: 根据状态map生成key映射ResourceList对象查找要显示的图片
 
